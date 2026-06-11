@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Turístico · Alfredo Chaves/ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --mata:#11331E; --mata-2:#0C2615; --serra:#2F6B41; --cachoeira:#2B7A8C;
+  --inhame:#C9983F; --neblina:#EFF3EC; --pedra:#21302A; --card:#FFFFFF;
+  --linha:rgba(17,51,30,.10); --musgo:#7FA653; --salvia:#8FB996;
+  --ink-soft:#5C6E63; --inhame-tint:rgba(201,152,63,.12);
+  --display:"Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --body:"Instrument Sans", system-ui, -apple-system, sans-serif;
+  --mono:"Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--neblina);color:var(--pedra);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--cachoeira)}
+:focus-visible{outline:3px solid var(--inhame);outline-offset:2px;border-radius:6px}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;background:linear-gradient(178deg,#0E2A18 0%,var(--mata) 55%,#16442A 100%);color:#F2F7F0;overflow:hidden;padding:72px 24px 200px}
+.hero-inner{position:relative;z-index:3;max-width:1120px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.32em;text-transform:uppercase;color:var(--inhame);font-weight:600}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,6.4vw,4.6rem);line-height:1.02;margin:.55rem 0 .9rem;letter-spacing:-.015em}
+.hero h1 em{font-style:normal;color:#BFE3C6}
+.hero .sub{max-width:620px;font-size:1.06rem;color:#CFE0CF}
+.hero .meta{margin-top:1.4rem;font-family:var(--mono);font-size:.78rem;color:#9DBCA3;letter-spacing:.06em}
+.hero .meta b{color:#E4D7B4;font-weight:600}
+.sol{position:absolute;z-index:1;top:46px;right:11%;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,#E8C46A 0%,#D9A94E 42%,rgba(217,169,78,0) 72%);opacity:.85;filter:blur(1px)}
+.serras{position:absolute;left:0;right:0;bottom:-2px;z-index:2;width:100%;height:240px;display:block}
+.mist{position:absolute;z-index:2;border-radius:50%;background:radial-gradient(closest-side,rgba(239,243,236,.34),rgba(239,243,236,0));filter:blur(8px);pointer-events:none}
+.mist.m1{width:520px;height:130px;bottom:78px;left:-140px;animation:drift 26s linear infinite}
+.mist.m2{width:680px;height:150px;bottom:34px;right:-220px;animation:drift 34s linear infinite reverse;animation-delay:-9s}
+@keyframes drift{from{transform:translateX(-6%)}50%{transform:translateX(7%)}to{transform:translateX(-6%)}}
+
+/* ---------- KPIs ---------- */
+.kpis{max-width:1120px;margin:-128px auto 0;padding:0 24px;position:relative;z-index:4;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi{background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:18px 18px 16px;
+  box-shadow:0 14px 34px -18px rgba(13,38,21,.45)}
+.kpi .k-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+.kpi .k-num{font-family:var(--mono);font-weight:600;font-size:clamp(1.7rem,2.6vw,2.3rem);color:var(--mata);margin:.25rem 0 .15rem;font-variant-numeric:tabular-nums}
+.kpi .k-num small{font-size:.55em;color:var(--serra)}
+.kpi .k-cap{font-size:.82rem;color:var(--ink-soft)}
+.kpi.gold .k-num{color:#9A742C}
+
+/* ---------- TABS ---------- */
+.tabbar{position:sticky;top:0;z-index:50;background:rgba(239,243,236,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--linha);margin-top:34px}
+.tabs{max-width:1120px;margin:0 auto;padding:12px 24px;display:flex;gap:8px;flex-wrap:wrap}
+.tab{font-family:var(--body);font-weight:600;font-size:.92rem;color:var(--mata);background:transparent;
+  border:1px solid transparent;border-radius:999px;padding:9px 18px;cursor:pointer;transition:background .18s,color .18s}
+.tab:hover{background:rgba(47,107,65,.10)}
+.tab.active{background:var(--mata);color:#F2F7F0}
+
+/* ---------- LAYOUT ---------- */
+main{max-width:1120px;margin:0 auto;padding:36px 24px 12px}
+.panel{display:none}
+.panel.active{display:block;animation:rise .4s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lead{max-width:760px;margin-bottom:26px;font-size:1.02rem;color:#3C5044}
+.lead b{color:var(--mata)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:18px;padding:22px;grid-column:span 6;min-width:0}
+.card.s4{grid-column:span 4}.card.s5{grid-column:span 5}.card.s7{grid-column:span 7}
+.card.s8{grid-column:span 8}.card.s12{grid-column:span 12}
+.c-eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+.card h3{font-family:var(--display);font-weight:700;font-size:1.22rem;color:var(--mata);margin:.3rem 0 .2rem;letter-spacing:-.01em}
+.card .note{font-size:.85rem;color:var(--ink-soft);margin-bottom:10px}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap.tall{height:380px}.chart-wrap.short{height:230px}
+.insight{grid-column:span 12;background:var(--inhame-tint);border-left:4px solid var(--inhame);
+  border-radius:0 14px 14px 0;padding:16px 20px;font-size:.98rem;color:#5A4516}
+.insight b{color:#7A5B1B}
+.insight .tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;display:block;color:#A07F33;margin-bottom:4px}
+
+/* big-stat tiles */
+.stat{display:flex;flex-direction:column;justify-content:center}
+.stat .s-num{font-family:var(--mono);font-weight:600;font-size:2.5rem;color:var(--serra);line-height:1.05;font-variant-numeric:tabular-nums}
+.stat.azul .s-num{color:var(--cachoeira)}
+.stat .s-cap{font-size:.92rem;color:var(--ink-soft);margin-top:6px;max-width:30ch}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;grid-column:span 12}
+.split{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:14px 0 8px}
+.split i{display:block;height:100%}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.83rem;color:var(--ink-soft)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{font-size:.83rem;font-weight:500;background:rgba(47,107,65,.10);color:var(--mata);
+  border-radius:999px;padding:6px 13px}
+.chip.gold{background:var(--inhame-tint);color:#7A5B1B}
+.chip.azul{background:rgba(43,122,140,.12);color:#1E5D6C}
+
+/* toggle */
+.toggle{display:inline-flex;background:rgba(17,51,30,.07);border-radius:999px;padding:4px;gap:4px;margin-bottom:14px}
+.toggle button{font-family:var(--body);font-weight:600;font-size:.84rem;border:0;border-radius:999px;
+  padding:7px 16px;cursor:pointer;background:transparent;color:var(--ink-soft);transition:all .18s}
+.toggle button.on{background:var(--mata);color:#fff}
+
+/* ---------- DIRECTORY ---------- */
+.dir-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:8px}
+.search{flex:1 1 260px;display:flex;align-items:center;background:#fff;border:1px solid var(--linha);
+  border-radius:12px;padding:11px 14px;gap:10px}
+.search svg{flex:none;opacity:.5}
+.search input{border:0;outline:0;font:inherit;width:100%;background:transparent;color:var(--pedra)}
+.fchips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.fchip{font-size:.82rem;font-weight:600;border:1px solid var(--linha);background:#fff;color:var(--ink-soft);
+  border-radius:999px;padding:7px 14px;cursor:pointer;transition:all .15s}
+.fchip:hover{border-color:var(--serra);color:var(--serra)}
+.fchip.on{background:var(--serra);border-color:var(--serra);color:#fff}
+.fchip.zona.on{background:var(--cachoeira);border-color:var(--cachoeira)}
+.dir-count{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin:10px 0 16px;letter-spacing:.04em}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.ecard{background:#fff;border:1px solid var(--linha);border-radius:14px;padding:16px 16px 14px;
+  display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s}
+.ecard:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(13,38,21,.4)}
+.ecard h4{font-family:var(--display);font-weight:700;font-size:1.02rem;color:var(--mata);line-height:1.25}
+.ecard .where{font-size:.82rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+.badge{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  border-radius:6px;padding:3px 8px;font-weight:600}
+.badge.rural{background:rgba(47,107,65,.12);color:var(--serra)}
+.badge.urbana{background:rgba(43,122,140,.14);color:#1E5D6C}
+.ecard .cats{display:flex;flex-wrap:wrap;gap:6px}
+.ecard .cats span{font-size:.72rem;font-weight:600;background:var(--neblina);color:#41584A;border-radius:6px;padding:3px 8px}
+.ecard .foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px;border-top:1px dashed var(--linha)}
+.ecard .ano{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+.ecard .insta{font-size:.78rem;font-weight:600;color:#9A742C;text-decoration:none}
+.ecard .insta:hover{text-decoration:underline}
+.empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--ink-soft)}
+.empty b{display:block;font-family:var(--display);font-size:1.1rem;color:var(--mata);margin-bottom:4px}
+
+/* ---------- FOOTER ---------- */
+footer{margin-top:64px;background:var(--mata);color:#AECBB4;padding:38px 24px 46px}
+.f-inner{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-end}
+.f-inner .ft{font-family:var(--display);font-weight:700;color:#F2F7F0;font-size:1.05rem}
+.f-inner p{font-size:.82rem;max-width:62ch}
+.f-inner .mono{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em}
+
+@media (max-width:980px){
+  .kpis{grid-template-columns:repeat(2,1fr);margin-top:-110px}
+  .kpi:last-child{grid-column:span 2}
+  .card,.card.s4,.card.s5,.card.s7,.card.s8{grid-column:span 12}
+  .statrow{grid-template-columns:repeat(2,1fr)}
+  .hero{padding:56px 20px 170px}
+}
+@media (max-width:560px){
+  .statrow{grid-template-columns:1fr}
+  .chart-wrap{height:250px}.chart-wrap.tall{height:340px}
+  .sol{right:-30px;top:24px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mist{animation:none}
+  .panel.active{animation:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="sol" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <span class="eyebrow">Diagnóstico da Oferta Turística</span>
+    <h1>Alfredo Chaves<br><em>entre serras e cachoeiras</em></h1>
+    <p class="sub">Um retrato do trade turístico do município, construído a partir da escuta de
+      <strong>92 empreendimentos</strong> — da adega na roça à pousada na cachoeira, do ateliê de
+      artesanato à agroindústria de inhame.</p>
+    <p class="meta"><b>Prefeitura Municipal de Alfredo Chaves · Secretaria de Turismo e Cultura</b> &nbsp;·&nbsp; Coleta em campo: out/2025 – mai/2026</p>
+  </div>
+  <div class="mist m1" aria-hidden="true"></div>
+  <div class="mist m2" aria-hidden="true"></div>
+  <svg class="serras" viewBox="0 0 1440 240" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#1B4F2E" opacity=".55" d="M0,150 L90,118 180,138 290,92 400,128 520,74 640,120 760,88 880,126 1000,70 1120,116 1240,86 1350,118 1440,96 1440,240 0,240Z"/>
+    <path fill="#174428" opacity=".8" d="M0,178 L120,140 230,164 350,118 470,156 600,104 720,150 850,112 980,152 1100,108 1230,148 1340,124 1440,142 1440,240 0,240Z"/>
+    <path fill="#102E1C" d="M0,206 L140,172 270,196 400,152 540,190 680,144 820,186 960,150 1100,188 1240,154 1360,184 1440,168 1440,240 0,240Z"/>
+    <path fill="#EFF3EC" d="M0,226 L1440,212 1440,240 0,240Z"/>
+  </svg>
+</header>
+
+<section class="kpis" aria-label="Indicadores-chave">
+  <div class="kpi"><div class="k-label">Empreendimentos</div><div class="k-num" data-count="92">0</div><div class="k-cap">ouvidos no diagnóstico</div></div>
+  <div class="kpi"><div class="k-label">Empregos diretos</div><div class="k-num" data-count="303" data-suffix="+">0</div><div class="k-cap">declarados por 85 respondentes</div></div>
+  <div class="kpi"><div class="k-label">Leitos ativos</div><div class="k-num" data-count="715">0</div><div class="k-cap">em 41 meios de hospedagem</div></div>
+  <div class="kpi"><div class="k-label">Vocação rural</div><div class="k-num" data-count="78" data-suffix="%">0</div><div class="k-cap">dos negócios na zona rural</div></div>
+  <div class="kpi gold"><div class="k-label">Setor jovem</div><div class="k-num" data-count="46" data-suffix="%">0</div><div class="k-cap">abriram as portas nos anos 2020</div></div>
+</section>
+
+<nav class="tabbar" aria-label="Seções do painel">
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab" aria-selected="true" data-tab="panorama">Panorama</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="infra">Infraestrutura &amp; Acesso</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="mercado">Mercado &amp; Divulgação</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="setores">Setores</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="dir">Empreendimentos</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ PANORAMA ============ -->
+<section class="panel active" id="panel-panorama" role="tabpanel">
+  <p class="lead">A oferta turística de Alfredo Chaves é <b>rural, gastronômica e em expansão</b>:
+  alimentação e hospedagem concentram a maior parte dos negócios, espalhados por mais de uma dezena
+  de localidades das montanhas capixabas.</p>
+  <div class="grid">
+    <div class="card s5">
+      <span class="c-eyebrow">Perfil da oferta</span>
+      <h3>Em que áreas o trade atua</h3>
+      <p class="note">Um mesmo empreendimento pode atuar em mais de uma área.</p>
+      <div class="chart-wrap"><canvas id="cCategorias"></canvas></div>
+    </div>
+    <div class="card s7">
+      <span class="c-eyebrow">Território</span>
+      <h3>Onde estão os empreendimentos</h3>
+      <p class="note">Localidade identificada a partir do endereço informado.</p>
+      <div class="chart-wrap tall"><canvas id="cLocalidades"></canvas></div>
+    </div>
+    <div class="card s7">
+      <span class="c-eyebrow">Linha do tempo</span>
+      <h3>Quando os negócios nasceram</h3>
+      <p class="note">Década de abertura · 87 empreendimentos informaram a data de início.</p>
+      <div class="chart-wrap"><canvas id="cDecadas"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Demanda atual</span>
+      <h3>Quem mais frequenta</h3>
+      <p class="note">Público principal apontado por cada empreendimento.</p>
+      <div class="chart-wrap"><canvas id="cPublico"></canvas></div>
+    </div>
+    <div class="card s12 stat" style="padding:26px 24px">
+      <span class="c-eyebrow">Zona de localização</span>
+      <h3 style="margin-bottom:2px">O turismo acontece na roça</h3>
+      <div class="split" aria-hidden="true">
+        <i style="width:78.3%;background:var(--serra)"></i><i style="width:21.7%;background:var(--cachoeira)"></i>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--serra)"></i><b>72</b> na zona rural (78%)</span>
+        <span><i style="background:var(--cachoeira)"></i><b>20</b> na zona urbana (22%)</span>
+      </div>
+    </div>
+    <div class="insight"><span class="tag">Leitura do dado</span>
+      <b>46% dos empreendimentos nasceram a partir de 2020</b> — o setor vive um ciclo recente de
+      abertura de negócios, puxado por hospedagem de pequeno porte e gastronomia rural. Ao mesmo tempo,
+      casas tradicionais seguem ativas: o registro mais antigo do diagnóstico remonta a <b>1893</b>.
+    </div>
+  </div>
+</section>
+
+<!-- ============ INFRAESTRUTURA ============ -->
+<section class="panel" id="panel-infra" role="tabpanel">
+  <p class="lead">O acesso é o maior gargalo apontado pelo trade: <b>quase metade dos empreendimentos
+  está em vias de terra, revsol ou brita</b>, e um em cada três não possui nenhuma placa de sinalização.</p>
+  <div class="grid">
+    <div class="card">
+      <span class="c-eyebrow">Chegando até lá</span>
+      <h3>Tipo de via de acesso</h3>
+      <p class="note">Classificação da via principal informada por cada empreendimento.</p>
+      <div class="chart-wrap"><canvas id="cVias"></canvas></div>
+    </div>
+    <div class="card">
+      <span class="c-eyebrow">Orientação do visitante</span>
+      <h3>Sinalização do empreendimento</h3>
+      <p class="note">Apenas 4 placas seguem padrão oficial (municipal ou EMBRATUR).</p>
+      <div class="chart-wrap"><canvas id="cSinal"></canvas></div>
+    </div>
+    <div class="card s7">
+      <span class="c-eyebrow">Inclusão</span>
+      <h3>Recursos de acessibilidade existentes</h3>
+      <p class="note">49% declaram alguma facilidade para pessoas com deficiência ou mobilidade reduzida.</p>
+      <div class="chart-wrap"><canvas id="cAcess"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Meios de pagamento</span>
+      <h3>Como o visitante paga</h3>
+      <p class="note">O Pix é praticamente universal no trade.</p>
+      <div class="chart-wrap"><canvas id="cPagto"></canvas></div>
+    </div>
+    <div class="statrow">
+      <div class="card stat"><div class="s-num">87%</div><div class="s-cap">funcionam em feriados — o calendário turístico é levado a sério</div></div>
+      <div class="card stat azul"><div class="s-num">20%</div><div class="s-cap">atendem em língua estrangeira: inglês (10), espanhol (4), italiano (4) e francês (1)</div></div>
+      <div class="card stat"><div class="s-num">14%</div><div class="s-cap">oferecem atendimento 24 horas, sobretudo hospedagens</div></div>
+      <div class="card stat azul"><div class="s-num">4<small style="font-size:.5em;color:var(--ink-soft)">/92</small></div><div class="s-cap">possuem placa em padrão oficial — campo aberto para um projeto municipal de sinalização</div></div>
+    </div>
+    <div class="insight"><span class="tag">Leitura do dado</span>
+      Para cada empreendimento em via asfaltada há <b>quase dois em estrada de terra, revsol ou brita</b>
+      (44 contra 23). Não por acaso, melhoria de estradas é a necessidade nº&nbsp;1 apontada pelo trade
+      — veja em <b>Mercado &amp; Divulgação</b>.
+    </div>
+  </div>
+</section>
+
+<!-- ============ MERCADO ============ -->
+<section class="panel" id="panel-mercado" role="tabpanel">
+  <p class="lead">A vitrine do turismo alfredense é digital e de fim de semana: <b>Instagram e WhatsApp
+  dominam a divulgação</b>, e o movimento se concentra de sexta a domingo. O público ainda é
+  majoritariamente capixaba — há espaço claro para atrair visitantes de fora do estado.</p>
+  <div class="grid">
+    <div class="card s7">
+      <span class="c-eyebrow">Divulgação</span>
+      <h3>Canais usados pelo trade</h3>
+      <p class="note">Resposta múltipla · % sobre os 92 empreendimentos.</p>
+      <div class="chart-wrap"><canvas id="cCanais"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Ritmo da semana</span>
+      <h3>Dias de funcionamento</h3>
+      <p class="note">Quantos empreendimentos abrem em cada dia.</p>
+      <div class="chart-wrap"><canvas id="cDias"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Recepção de grupos</span>
+      <h3>Capacidade por grupo</h3>
+      <p class="note">85% recebem grupos de visitantes; 9 negócios absorvem caravanas de 100+ pessoas.</p>
+      <div class="chart-wrap"><canvas id="cGrupos"></canvas></div>
+    </div>
+    <div class="card s7">
+      <span class="c-eyebrow">Prioridades apontadas</span>
+      <h3>Necessidades segundo o trade</h3>
+      <div class="toggle" role="group" aria-label="Alternar visão de necessidades">
+        <button class="on" id="btnMun">Do município</button>
+        <button id="btnEmp">Dos empreendimentos</button>
+      </div>
+      <div class="chart-wrap short"><canvas id="cNecess"></canvas></div>
+    </div>
+    <div class="insight"><span class="tag">Leitura do dado</span>
+      <b>Só 5% têm turistas de outros estados como público principal.</b> Com 84% do trade já presente
+      no Instagram, uma campanha integrada de divulgação dos atrativos — 2ª maior necessidade apontada
+      (80%) — encontra o terreno pronto para ampliar o alcance do destino.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SETORES ============ -->
+<section class="panel" id="panel-setores" role="tabpanel">
+  <p class="lead">Mesa posta e cama feita: <b>alimentação (43) e hospedagem (41)</b> são os pilares da
+  oferta, com a agroindústria familiar dando o tempero — do café de altitude ao famoso
+  <b>sorvete de inhame</b>.</p>
+  <div class="grid">
+    <div class="card s7">
+      <span class="c-eyebrow">Alimentação · 43 empreendimentos</span>
+      <h3>Tipos de casa</h3>
+      <p class="note">Resposta múltipla · cozinha <b>caseira</b> é a identidade declarada por 32 das 43 casas.</p>
+      <div class="chart-wrap"><canvas id="cAlim"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Hospedagem · 41 meios</span>
+      <h3>Regime de diárias</h3>
+      <p class="note">Resposta múltipla. Oferta ativa o ano inteiro: 40–41 meios abertos em todos os meses.</p>
+      <div class="chart-wrap"><canvas id="cDiarias"></canvas></div>
+    </div>
+    <div class="card s5">
+      <span class="c-eyebrow">Hospedagem</span>
+      <h3>Como o hóspede reserva</h3>
+      <p class="note">O WhatsApp é o balcão de reservas de 100% dos meios de hospedagem.</p>
+      <div class="chart-wrap short"><canvas id="cReservas"></canvas></div>
+    </div>
+    <div class="card s7">
+      <span class="c-eyebrow">Agroindústria · 17 produtores</span>
+      <h3>Sabores da terra</h3>
+      <p class="note">Produtos declarados pelas agroindústrias do diagnóstico · 4 já oferecem turismo de experiência.</p>
+      <div class="chips">
+        <span class="chip gold">Cachaça</span><span class="chip gold">Cerveja artesanal</span>
+        <span class="chip gold">Vinhos coloniais</span><span class="chip">Queijos</span>
+        <span class="chip">Café</span><span class="chip">Biscoitos</span>
+        <span class="chip">Bananada &amp; mariola</span><span class="chip">Banana-passa</span>
+        <span class="chip">Bombons</span><span class="chip">Gengibre</span>
+        <span class="chip">Palmito</span><span class="chip">Linguiça artesanal</span>
+        <span class="chip gold">Sorvete &amp; picolé de inhame</span><span class="chip">Inhame &amp; batata-baroa</span>
+        <span class="chip">Frutas da estação</span><span class="chip">Licores</span><span class="chip">Conservas</span>
+      </div>
+    </div>
+    <div class="statrow">
+      <div class="card stat azul"><div class="s-num">7</div><div class="s-cap">atrativos de natureza cadastrados — as cachoeiras são o cartão-postal</div></div>
+      <div class="card stat"><div class="s-num">11</div><div class="s-cap">operações de entretenimento e aventura entre trilhas, quedas e montanhas</div></div>
+      <div class="card stat azul"><div class="s-num">19</div><div class="s-cap">pontos de compras: artesanato, moda e produtos da roça para levar de lembrança</div></div>
+      <div class="card stat"><div class="s-num">74%</div><div class="s-cap">das casas de alimentação se definem pela cozinha caseira — herança da colonização italiana</div></div>
+    </div>
+    <div class="insight"><span class="tag">Leitura do dado</span>
+      A cadeia já se conecta: adegas que hospedam, pousadas que servem café colonial, cachoeiras com
+      lanchonete. <b>Estruturar rotas que combinem natureza + mesa + produto da roça</b> é o caminho
+      natural sugerido pelos próprios dados.
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIRETÓRIO ============ -->
+<section class="panel" id="panel-dir" role="tabpanel">
+  <p class="lead">Os <b>92 empreendimentos do diagnóstico</b>, prontos para consulta. Busque pelo nome
+  ou localidade e filtre por área de atuação.</p>
+  <div class="dir-tools">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="dirSearch" placeholder="Buscar por nome ou localidade…" aria-label="Buscar empreendimento">
+    </label>
+  </div>
+  <div class="fchips" id="catChips" aria-label="Filtrar por área"></div>
+  <div class="fchips" aria-label="Filtrar por zona">
+    <button class="fchip zona on" data-zona="Todas">Rural + Urbana</button>
+    <button class="fchip zona" data-zona="Rural">Zona rural</button>
+    <button class="fchip zona" data-zona="Urbana">Zona urbana</button>
+  </div>
+  <div class="dir-count" id="dirCount"></div>
+  <div class="dir-grid" id="dirGrid"></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="f-inner">
+    <div>
+      <div class="ft">Diagnóstico da Oferta Turística · Alfredo Chaves/ES</div>
+      <p style="margin-top:6px">Base: 92 formulários respondidos pelo trade turístico entre outubro/2025 e maio/2026.
+      Percentuais calculados sobre o total de respondentes de cada questão. Questões de resposta múltipla
+      podem somar mais de 100%.</p>
+    </div>
+    <div class="mono">Prefeitura Municipal de Alfredo Chaves<br>Secretaria de Turismo e Cultura · 2026</div>
+  </div>
+</footer>
+
+<script>
+/* ==================== DADOS ==================== */
+const D = {
+  categorias: {labels:["Alimentação","Hospedagem","Compras","Agroindústria","Aventura","Natureza","Cultural","Apoio / Serviços"], data:[43,41,19,17,11,7,2,2]},
+  localidades: {labels:["Outras localidades rurais","Matilde","São Roque de Maravilha","Sede / Centro","São Bento de Urânia","Batatal","Crubixá","Carolina","São Marcos","Ribeirão do Cristo","Ibitiruí","Cachoeira Alta","Sagrada Família"], data:[20,17,14,12,7,5,4,3,3,3,2,1,1]},
+  decadas: {labels:["Até 1989","Anos 1990","Anos 2000","Anos 2010","Anos 2020"], data:[4,7,12,24,40]},
+  publico: {labels:["Visitantes do Espírito Santo","Moradores locais","Turistas de outros estados"], data:[61,26,5]},
+  vias: {labels:["Terra","Asfaltada","Revsol / Brita","Calçada / Calçamento","Mista"], data:[24,23,20,19,6]},
+  sinal: {labels:["Modelo próprio","Não possui","Padrão municipal","Padrão EMBRATUR"], data:[60,28,3,1]},
+  acess: {labels:["Rampa","Estacionamento acessível","Rampa de acesso à calçada","Corrimão","Elevador","Outros recursos"], data:[33,33,13,10,2,4]},
+  pagto: {labels:["Pix","Dinheiro","Cartão de débito","Cartão de crédito","Cheque"], data:[91,86,55,54,7]},
+  canais: {labels:["Instagram","WhatsApp","Facebook","Sites de turismo (Booking, Airbnb…)","Parcerias com o trade","Indicação de guias","Boca a boca","TikTok"], data:[77,59,23,16,7,5,4,2]},
+  dias: {labels:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"], data:[56,59,61,68,83,82,76]},
+  grupos: {labels:["Até 15","10 a 25","25 a 50","50 a 75","75 a 100","100+","Não recebe"], data:[16,27,16,4,6,9,14]},
+  necMun: {labels:["Melhoria de estradas e acessos","Divulgação dos atrativos","Sinalização vertical (placas)","Capacitação profissional","Sinalização horizontal"], data:[79,74,60,51,28]},
+  necEmp: {labels:["Marketing e redes sociais","Mão de obra","Vendas e estratégia comercial","Capacitação da equipe","Gestão administrativa","Jurídico / regularização","Gestão financeira"], data:[55,43,35,34,16,16,14]},
+  alim: {labels:["Restaurante","Lanchonete","Cafeteria","Padaria","Pizzaria","Confeitaria","Cervejaria","Outros"], data:[19,16,6,6,5,4,4,8]},
+  diarias: {labels:["Sem alimentação","Café da manhã","Pensão completa","Meia pensão","Tudo incluído"], data:[18,13,8,6,4]},
+  reservas: {labels:["WhatsApp / telefone","Site próprio e OTAs","Balcão","Agência de turismo"], data:[41,20,7,2]}
+};
+const DIRECTORY = [{"n":"Adega Família Pin","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação","Hospedagem"],"a":2014,"i":""},{"n":"Afrochaves","l":"Sede / Centro","z":"Rural","c":["Cultural"],"a":2018,"i":"@afrochaves18"},{"n":"Arte e Cultura - Artesanato e Produtos Caseiros","l":"São Roque de Maravilha","z":"Rural","c":["Agroindústria"],"a":2015,"i":""},{"n":"Ateliê Ana bonecas de pano","l":"Sede / Centro","z":"Urbana","c":["Compras"],"a":2020,"i":"@ana.bonecasdepano"},{"n":"Atelie Ipê","l":"Batatal","z":"Rural","c":["Compras","Cultural"],"a":2025,"i":"@atelieipe70"},{"n":"Banana Passas Sabor do Campo","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria","Compras"],"a":2008,"i":""},{"n":"Barzinho Casa Velha","l":"Carolina","z":"Rural","c":["Alimentação","Agroindústria"],"a":2019,"i":"@casavelhabarzinho"},{"n":"BISCOITOS TIA VIRGINIA","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria","Compras"],"a":1983,"i":""},{"n":"Cachaça Cavalinho","l":"São Marcos","z":"Rural","c":["Agroindústria"],"a":1933,"i":"@cachacacavalinho"},{"n":"Cachoeira Paganini","l":"Crubixá","z":"Rural","c":["Alimentação","Natureza"],"a":2015,"i":"@cachoeira.paganini"},{"n":"Cachoeira Piripitinga restaurante e lazer","l":"Batatal","z":"Rural","c":["Alimentação","Aventura"],"a":2022,"i":"@cachoeira.poripitinga"},{"n":"Cachoeira Vovó Lúcia","l":"Ibitiruí","z":"Rural","c":["Alimentação","Hospedagem","Aventura","Natureza"],"a":1990,"i":"@cachoeiravovolucia"},{"n":"CAFÉ DO MONTE","l":"Crubixá","z":"Rural","c":["Alimentação"],"a":2022,"i":"@cafedomonte_"},{"n":"Cantinho que Delicia","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação"],"a":2025,"i":""},{"n":"Casa do Artesão","l":"Sede / Centro","z":"Urbana","c":["Compras"],"a":2026,"i":""},{"n":"Casa Recanto dos Pássaros","l":"Matilde","z":"Rural","c":["Hospedagem"],"a":null,"i":""},{"n":"Caseiros do Rancho","l":"Matilde","z":"Rural","c":["Compras"],"a":2025,"i":"@ranchosertanejolanchonete"},{"n":"Cervejaria Alfredense","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria"],"a":2020,"i":""},{"n":"Chale da Cris","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem","Aventura"],"a":2020,"i":""},{"n":"Chalé das Pedras -  Refúgio em meio à Natureza","l":"Ribeirão do Cristo","z":"Rural","c":["Apoio / Serviços"],"a":2025,"i":"@chaledaspedras.oficial"},{"n":"Chalés Barco encalhado","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem"],"a":2024,"i":""},{"n":"Chalés Maravilha","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação","Hospedagem"],"a":2023,"i":""},{"n":"Charcutaria Só Suínos","l":"Matilde","z":"Rural","c":["Alimentação"],"a":2020,"i":"@sosuinos.es"},{"n":"Churrasquinho cantinho do céu Ltda","l":"Sede / Centro","z":"Urbana","c":["Alimentação"],"a":2015,"i":""},{"n":"Conservas da branca","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação"],"a":2000,"i":""},{"n":"Del mio cuore","l":"Batatal","z":"Rural","c":["Alimentação"],"a":2017,"i":""},{"n":"Doces Matilde","l":"São Marcos","z":"Rural","c":["Agroindústria"],"a":1997,"i":"@docesmatilde"},{"n":"Encontro das Águas Guest House","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem","Aventura"],"a":2021,"i":"@encontrodasaguasguesthouse"},{"n":"Frescor das Montanhas","l":"São Bento de Urânia","z":"Rural","c":["Alimentação","Agroindústria","Compras","Natureza"],"a":2017,"i":"@Frescor.das.montanhas"},{"n":"Gostinho caseiro","l":"Matilde","z":"Urbana","c":["Alimentação"],"a":2013,"i":"@gostinho_caseiro_matilde"},{"n":"Hesio Artesanato","l":"Sede / Centro","z":"Urbana","c":["Compras"],"a":2002,"i":""},{"n":"Hospedagem Cachoeiras de Matilde","l":"Matilde","z":"Rural","c":["Hospedagem"],"a":2021,"i":""},{"n":"Hotel Volponi","l":"Sede / Centro","z":"Urbana","c":["Hospedagem"],"a":2005,"i":"@hotelvolponi"},{"n":"Indique Um Vinho (venda de vinhos e eventos)","l":"Sede / Centro","z":"Urbana","c":["Alimentação","Compras"],"a":2024,"i":"@indiqueumvinho"},{"n":"Laianamodas","l":"Matilde","z":"Rural","c":["Alimentação","Compras"],"a":2024,"i":"@Laianamodas_store"},{"n":"Lanchonete e Pizzaria Peruzzos","l":"Sede / Centro","z":"Urbana","c":["Alimentação"],"a":2015,"i":""},{"n":"Lanchonete e Pizzaria Rancho Sertanejo","l":"Matilde","z":"Rural","c":["Alimentação"],"a":2017,"i":"@ranchosertanejo17"},{"n":"Mariola quintovelhense","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria","Compras"],"a":2016,"i":""},{"n":"Mercearia e Bar Fornazier","l":"Matilde","z":"Rural","c":["Alimentação"],"a":1994,"i":""},{"n":"O rei do inhame","l":"Outras localidades rurais","z":"Rural","c":["Alimentação","Agroindústria","Compras"],"a":1893,"i":"@jandirgratieri"},{"n":"Padaria Central du Pão","l":"Sede / Centro","z":"Urbana","c":["Alimentação"],"a":2003,"i":"@padariacentraldupao"},{"n":"Padaria e Confeitaria Ki Pão","l":"Sede / Centro","z":"Urbana","c":["Alimentação"],"a":1993,"i":"@padariaeconfeitariakipao"},{"n":"Pandaria e Lanchonete Buono Di Urania","l":"São Bento de Urânia","z":"Rural","c":["Alimentação"],"a":2026,"i":"@buono_di_urania"},{"n":"Pastelaria e Caldo de Cana da Dith","l":"São Bento de Urânia","z":"Rural","c":["Alimentação"],"a":2002,"i":"@judithgava"},{"n":"Pedacinho do Céu","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem"],"a":2022,"i":""},{"n":"Posto São Geraldo","l":"Matilde","z":"Rural","c":["Apoio / Serviços"],"a":null,"i":""},{"n":"Pousada  e Restaurante ÁGUAS DE PINON LTDA - ME","l":"Carolina","z":"Rural","c":["Alimentação","Hospedagem","Compras","Natureza"],"a":1995,"i":""},{"n":"Pousada  Fora do Ar/TakeOff Adventure Co.","l":"Cachoeira Alta","z":"Rural","c":["Hospedagem","Aventura"],"a":2003,"i":""},{"n":"Pousada Beira do Rio","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem","Aventura"],"a":2022,"i":""},{"n":"Pousada da giovana","l":"Outras localidades rurais","z":"Rural","c":["Hospedagem"],"a":2018,"i":""},{"n":"Pousada Drika","l":"Sede / Centro","z":"Urbana","c":["Hospedagem"],"a":null,"i":""},{"n":"Pousada e Restaurante Quintino","l":"Outras localidades rurais","z":"Rural","c":["Alimentação","Hospedagem","Natureza"],"a":2003,"i":"@pousadaquintinoluizevera"},{"n":"Pousada e Restaurante Recanto Som das Aguas LTDA","l":"Matilde","z":"Urbana","c":["Alimentação","Hospedagem"],"a":2019,"i":"@somdasaguases"},{"n":"POUSADA E RESTAURANTE TIA VIRGINIA","l":"Outras localidades rurais","z":"Rural","c":["Alimentação","Hospedagem"],"a":2010,"i":""},{"n":"Pousada e Restaurante Vale das Cachoeiras","l":"Carolina","z":"Rural","c":["Alimentação","Hospedagem"],"a":1999,"i":""},{"n":"Pousada Lorenzon","l":"São Bento de Urânia","z":"Rural","c":["Hospedagem","Aventura","Natureza"],"a":2017,"i":"@pousadalorenzon"},{"n":"Pousada Maravilha","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação","Hospedagem"],"a":null,"i":"@pousadamaravilha_saoroque"},{"n":"Pousada Recanto da Ilha","l":"Outras localidades rurais","z":"Urbana","c":["Hospedagem"],"a":2020,"i":"@pousada.recantoilha"},{"n":"Pousada Recanto Iza","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação","Hospedagem"],"a":2008,"i":"@pousadarecantoiza"},{"n":"Pousada Recanto Tia Martha","l":"Ibitiruí","z":"Rural","c":["Hospedagem"],"a":2023,"i":"@recantotiamarta"},{"n":"Pousada São Roque","l":"São Roque de Maravilha","z":"Rural","c":["Alimentação","Hospedagem"],"a":null,"i":"@pousadasaoroque"},{"n":"Pousada Sitio Canaã","l":"Ribeirão do Cristo","z":"Rural","c":["Hospedagem"],"a":2013,"i":"@canaasitioes"},{"n":"Pousada Thomas","l":"Outras localidades rurais","z":"Rural","c":["Alimentação","Hospedagem","Aventura"],"a":2020,"i":"@pousadathomas"},{"n":"Pousada Vila Mathilde","l":"Matilde","z":"Rural","c":["Hospedagem"],"a":2014,"i":"@pousadavilamathilde_oficial"},{"n":"Pousada Villa Laura Balbi","l":"Matilde","z":"Urbana","c":["Hospedagem"],"a":2022,"i":"@villalaurabalbi"},{"n":"POUSADA YRACEMA","l":"Matilde","z":"Rural","c":["Alimentação","Hospedagem"],"a":2023,"i":"@pousadayracema"},{"n":"Pousada, Restaurante e Campimg Prainha","l":"Matilde","z":"Rural","c":["Alimentação","Hospedagem"],"a":1997,"i":"@pousadacapingprainha"},{"n":"Produtos Caseitos Collodetti","l":"Outras localidades rurais","z":"Rural","c":["Compras"],"a":2021,"i":""},{"n":"Produtos Pietralonga palmito pupunha in natura","l":"Crubixá","z":"Rural","c":["Agroindústria"],"a":2011,"i":""},{"n":"Q'passa Lanchonete","l":"Outras localidades rurais","z":"Urbana","c":["Alimentação"],"a":2025,"i":"@qpas_sa"},{"n":"Queijaria Busato","l":"São Bento de Urânia","z":"Rural","c":["Agroindústria","Compras"],"a":2025,"i":""},{"n":"Recanto Recreio","l":"Outras localidades rurais","z":"Rural","c":["Hospedagem"],"a":2023,"i":""},{"n":"Recanto Rio Maravilha","l":"São Roque de Maravilha","z":"Rural","c":["Hospedagem","Aventura"],"a":2022,"i":"@orecantoriomaravilha"},{"n":"Restaurante Adega","l":"Matilde","z":"Rural","c":["Alimentação"],"a":2015,"i":"@adegamatilde"},{"n":"Restaurante Boldrini","l":"Sede / Centro","z":"Urbana","c":["Alimentação"],"a":2001,"i":"@restauranteboldrini_"},{"n":"Restaurante Carla e Fofão","l":"Outras localidades rurais","z":"Urbana","c":["Alimentação"],"a":2025,"i":""},{"n":"Rock Capixaba","l":"Outras localidades rurais","z":"Urbana","c":["Alimentação"],"a":2023,"i":"@orockcapixaba"},{"n":"Sagrada Família Café","l":"Sagrada Família","z":"Urbana","c":["Agroindústria"],"a":2025,"i":"@sagrada.familiacafe"},{"n":"Sítio Aldeia das Águas","l":"Batatal","z":"Rural","c":["Hospedagem"],"a":2016,"i":""},{"n":"Sitio Canta Galo","l":"São Bento de Urânia","z":"Rural","c":["Agroindústria","Compras"],"a":2025,"i":""},{"n":"Sítio das Águas","l":"Outras localidades rurais","z":"Rural","c":["Hospedagem"],"a":2023,"i":"@sitiodasaguas"},{"n":"Sítio De Nadai","l":"Batatal","z":"Rural","c":["Hospedagem"],"a":2024,"i":"@sitiodenadai"},{"n":"Sítio do Vovô","l":"Outras localidades rurais","z":"Rural","c":["Hospedagem"],"a":2021,"i":"@_sitiodovovo"},{"n":"Sítio Ouro Verde","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria","Compras"],"a":1977,"i":"@vinho_montanhacapixaba"},{"n":"Sítio Recanto da Videira","l":"Matilde","z":"Rural","c":["Agroindústria","Compras"],"a":2009,"i":""},{"n":"Sítio Terras Claras","l":"São Bento de Urânia","z":"Rural","c":["Alimentação","Hospedagem","Aventura","Natureza"],"a":2022,"i":"@terrasclaras"},{"n":"Sítio Três Lagoas ( não possui empresa cadastrada)","l":"Outras localidades rurais","z":"Rural","c":["Agroindústria","Compras"],"a":2018,"i":"@sitiotreslagoas_ac"},{"n":"SORVETERIA & AÇAÍTERIA FRUTÍSSIMO ALFREDO CHAVES","l":"Outras localidades rurais","z":"Urbana","c":["Alimentação"],"a":2017,"i":"@frutissimo_alfredochaves"},{"n":"Taberna Choperia e Cafeteria Som das Aguas LTDA","l":"São Marcos","z":"Rural","c":["Alimentação"],"a":2025,"i":"@taberna.saomarcos"},{"n":"Villaggio Benevente","l":"Matilde","z":"Rural","c":["Hospedagem"],"a":2021,"i":"@villaggiobenevente"},{"n":"Sítio Vista da Mata","l":"Ribeirão do Cristo","z":"Rural","c":["Hospedagem","Aventura"],"a":2015,"i":""},{"n":"SÍTIO PÔR DO SOL","l":"Crubixá","z":"Rural","c":["Hospedagem"],"a":2005,"i":"@PORDOSOL_ALUGUELTEMPORADA"}];
+
+/* ==================== SETUP ==================== */
+const RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const COL = {serra:"#2F6B41", cachoeira:"#2B7A8C", inhame:"#C9983F", musgo:"#7FA653",
+             salvia:"#8FB996", mata:"#11331E", petroleo:"#5E8C93", madeira:"#A4845C", cinza:"#B9C6BC"};
+const PAL = [COL.serra, COL.cachoeira, COL.inhame, COL.musgo, COL.petroleo, COL.salvia, COL.madeira, COL.mata];
+
+if (window.Chart) {
+  Chart.defaults.font.family = "'Instrument Sans', system-ui, sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = "#5C6E63";
+  Chart.defaults.animation = RM ? false : {duration: 700, easing: "easeOutQuart"};
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.pointStyle = "rectRounded";
+  Chart.defaults.plugins.legend.labels.boxWidth = 9;
+  Chart.defaults.plugins.tooltip.backgroundColor = "#0C2615";
+  Chart.defaults.plugins.tooltip.titleFont = {family:"'Instrument Sans'", weight:"600"};
+  Chart.defaults.plugins.tooltip.bodyFont = {family:"'Spline Sans Mono', monospace", size:12};
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.displayColors = false;
+}
+const pct = (v, base=92) => Math.round(v/base*100);
+const gridSoft = {color:"rgba(17,51,30,.07)"};
+const HAS_CHART = !!window.Chart;
+
+function hbar(id, src, color, base, tall){
+  const el = document.getElementById(id); if(!HAS_CHART || !el) return;
+  new Chart(el, {type:"bar",
+    data:{labels:src.labels, datasets:[{data:src.data, backgroundColor:color, borderRadius:7, barPercentage:.72, categoryPercentage:.78}]},
+    options:{indexAxis:"y", maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.parsed.x} empreendimentos${base?` · ${pct(c.parsed.x,base)}%`:""}`}}},
+      scales:{x:{grid:gridSoft, ticks:{precision:0}}, y:{grid:{display:false}, ticks:{font:{size:tall?11.5:12}}}}}});
+}
+function vbar(id, src, colors, opts={}){
+  const el = document.getElementById(id); if(!HAS_CHART || !el) return;
+  new Chart(el, {type:"bar",
+    data:{labels:src.labels, datasets:[{data:src.data, backgroundColor:colors, borderRadius:8, barPercentage:.68, categoryPercentage:.74}]},
+    options:{maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>` ${c.parsed.y} empreendimentos${opts.base?` · ${pct(c.parsed.y,opts.base)}%`:""}`}}},
+      scales:{x:{grid:{display:false}}, y:{grid:gridSoft, ticks:{precision:0}, beginAtZero:true}}}});
+}
+function donut(id, src, colors, base){
+  const el = document.getElementById(id); if(!HAS_CHART || !el) return;
+  new Chart(el, {type:"doughnut",
+    data:{labels:src.labels, datasets:[{data:src.data, backgroundColor:colors, borderColor:"#FFFFFF", borderWidth:2.5, hoverOffset:7}]},
+    options:{maintainAspectRatio:false, cutout:"58%",
+      plugins:{legend:{position:"bottom", labels:{padding:14, font:{size:11.5}}},
+        tooltip:{callbacks:{label:c=>` ${c.parsed} · ${pct(c.parsed, base ?? src.data.reduce((a,b)=>a+b,0))}%`}}}}});
+}
+
+/* ==================== INIT POR ABA ==================== */
+const inited = {};
+const initTab = {
+  panorama(){
+    donut("cCategorias", D.categorias, PAL);
+    hbar("cLocalidades", D.localidades, COL.serra, 92, true);
+    vbar("cDecadas", D.decadas, D.decadas.labels.map((_,i)=> i===4 ? COL.inhame : COL.serra), {base:87});
+    donut("cPublico", D.publico, [COL.serra, COL.salvia, COL.inhame], 92);
+  },
+  infra(){
+    vbar("cVias", D.vias, [COL.madeira, COL.serra, COL.petroleo, COL.salvia, COL.cinza], {base:92});
+    donut("cSinal", D.sinal, [COL.serra, COL.cinza, COL.cachoeira, COL.inhame], 92);
+    hbar("cAcess", D.acess, COL.cachoeira);
+    hbar("cPagto", D.pagto, COL.serra, 92);
+  },
+  mercado(){
+    hbar("cCanais", D.canais, COL.cachoeira, 92);
+    vbar("cDias", D.dias, D.dias.data.map(v=> v>=76 ? COL.inhame : COL.serra), {base:92});
+    vbar("cGrupos", D.grupos, D.grupos.labels.map(l=> l==="Não recebe" ? COL.cinza : COL.cachoeira), {base:92});
+    buildNecess();
+  },
+  setores(){
+    hbar("cAlim", D.alim, COL.serra, 43);
+    donut("cDiarias", D.diarias, [COL.salvia, COL.inhame, COL.serra, COL.cachoeira, COL.madeira]);
+    hbar("cReservas", D.reservas, COL.cachoeira, 41);
+  },
+  dir(){ renderDir(); }
+};
+function activate(name){
+  document.querySelectorAll(".tab").forEach(b=>{
+    const on = b.dataset.tab === name;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on);
+  });
+  document.querySelectorAll(".panel").forEach(p=> p.classList.toggle("active", p.id === "panel-"+name));
+  if(!inited[name]){ inited[name] = true; initTab[name] && initTab[name](); }
+}
+document.querySelectorAll(".tab").forEach(b=> b.addEventListener("click", ()=> activate(b.dataset.tab)));
+
+/* ---- toggle necessidades ---- */
+let necChart = null;
+function buildNecess(){
+  const el = document.getElementById("cNecess"); if(!HAS_CHART || !el) return;
+  necChart = new Chart(el, {type:"bar",
+    data:{labels:D.necMun.labels, datasets:[{data:D.necMun.data, backgroundColor:COL.inhame, borderRadius:7, barPercentage:.7, categoryPercentage:.76}]},
+    options:{indexAxis:"y", maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.parsed.x} citações · ${pct(c.parsed.x)}%`}}},
+      scales:{x:{grid:gridSoft, ticks:{precision:0}, max:92}, y:{grid:{display:false}, ticks:{font:{size:11.5}}}}}});
+}
+function swapNecess(src, onBtn, offBtn){
+  if(!necChart) return;
+  necChart.data.labels = src.labels;
+  necChart.data.datasets[0].data = src.data;
+  necChart.data.datasets[0].backgroundColor = (src === D.necMun) ? COL.inhame : COL.serra;
+  necChart.update();
+  onBtn.classList.add("on"); offBtn.classList.remove("on");
+}
+const bM = document.getElementById("btnMun"), bE = document.getElementById("btnEmp");
+bM.addEventListener("click", ()=> swapNecess(D.necMun, bM, bE));
+bE.addEventListener("click", ()=> swapNecess(D.necEmp, bE, bM));
+
+/* ==================== DIRETÓRIO ==================== */
+const CATS = ["Todas","Alimentação","Hospedagem","Compras","Agroindústria","Aventura","Natureza","Cultural","Apoio / Serviços"];
+const state = {q:"", cat:"Todas", zona:"Todas"};
+const chipsWrap = document.getElementById("catChips");
+CATS.forEach(c=>{
+  const b = document.createElement("button");
+  b.className = "fchip" + (c==="Todas" ? " on" : "");
+  b.textContent = c; b.dataset.cat = c;
+  b.addEventListener("click", ()=>{
+    state.cat = c;
+    chipsWrap.querySelectorAll(".fchip").forEach(x=> x.classList.toggle("on", x===b));
+    renderDir();
+  });
+  chipsWrap.appendChild(b);
+});
+document.querySelectorAll(".fchip.zona").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    state.zona = b.dataset.zona;
+    document.querySelectorAll(".fchip.zona").forEach(x=> x.classList.toggle("on", x===b));
+    renderDir();
+  });
+});
+const deburr = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+document.getElementById("dirSearch").addEventListener("input", e=>{ state.q = deburr(e.target.value.trim()); renderDir(); });
+
+function renderDir(){
+  const grid = document.getElementById("dirGrid"); if(!grid) return;
+  const list = DIRECTORY
+    .filter(e => state.cat==="Todas" || e.c.includes(state.cat))
+    .filter(e => state.zona==="Todas" || e.z===state.zona)
+    .filter(e => !state.q || deburr(e.n).includes(state.q) || deburr(e.l).includes(state.q))
+    .sort((a,b)=> a.n.localeCompare(b.n, "pt-BR"));
+  document.getElementById("dirCount").textContent =
+    `MOSTRANDO ${list.length} DE ${DIRECTORY.length} EMPREENDIMENTOS`;
+  if(!list.length){
+    grid.innerHTML = `<div class="empty"><b>Nenhum resultado por aqui</b>Ajuste a busca ou limpe os filtros para ver todo o trade.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(e=>`
+    <article class="ecard">
+      <h4>${e.n}</h4>
+      <div class="where">
+        <span class="badge ${e.z==="Rural"?"rural":"urbana"}">${e.z}</span>
+        <span>· ${e.l}</span>
+      </div>
+      <div class="cats">${e.c.map(c=>`<span>${c}</span>`).join("")}</div>
+      <div class="foot">
+        <span class="ano">${e.a ? "desde "+e.a : "—"}</span>
+        ${e.i ? `<a class="insta" href="https://instagram.com/${e.i.replace("@","")}" target="_blank" rel="noopener">${e.i}</a>` : ""}
+      </div>
+    </article>`).join("");
+}
+
+/* ==================== KPI COUNT-UP ==================== */
+document.querySelectorAll("[data-count]").forEach(el=>{
+  const target = +el.dataset.count, suf = el.dataset.suffix || "";
+  if(RM){ el.textContent = target.toLocaleString("pt-BR") + suf; return; }
+  const t0 = performance.now(), dur = 950;
+  (function step(t){
+    const p = Math.min((t-t0)/dur, 1), e = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.round(target*e).toLocaleString("pt-BR") + suf;
+    if(p < 1) requestAnimationFrame(step);
+  })(t0);
+});
+
+/* primeira aba */
+initTab.panorama(); inited.panorama = true;
+</script>
+</body>
+</html>
